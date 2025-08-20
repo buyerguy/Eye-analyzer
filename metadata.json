@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Iris Analyzer ",
+  "description": "Upload or capture a high-quality photo of your eye to receive a fun, visual, and educational analysis of your iris color and patterns based on AI.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "prompt": ""
+}
