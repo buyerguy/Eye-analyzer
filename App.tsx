@@ -2,7 +2,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { AppState, IrisAnalysis, HistoryItem } from './types';
 import { analyzeIrisImage, createThumbnailDataUrl } from './services/geminiService';
-import { IconCamera, IconUpload, IconSparkles, IconArrowLeft, IconInfo, IconHistory, IconSettings, IconRetry } from './components/IconComponents';
+import { IconCamera, IconUpload, IconSparkles, IconInfo, IconRetry } from './components/IconComponents';
 import Spinner from './components/Spinner';
 import AnalysisResult from './components/AnalysisResult';
 import DisclaimerModal from './components/DisclaimerModal';
@@ -12,9 +12,10 @@ import SettingsModal from './components/SettingsModal';
 import InfoModal from './components/InfoModal';
 import ProBadge from './components/ProBadge';
 import HistoryScreen from './components/HistoryScreen';
+import CameraCapture from './components/CameraCapture';
 import { logger } from './services/logger';
 import heic2any from 'heic2any';
-import CameraCapture from './components/CameraCapture';
+import BottomNavBar from './components/BottomNavBar';
 
 
 const App: React.FC = () => {
@@ -117,7 +118,7 @@ const App: React.FC = () => {
       let historyImageSrc = imageDataUrl;
       try {
         // Create a smaller thumbnail for history to save space
-        historyImageSrc = await createThumbnailDataUrl(imageDataUrl, 200);
+        historyImageSrc = await createThumbnailDataUrl(imageDataUrl, 150);
       } catch (thumbError) {
         logger.warn('Could not create thumbnail for history item, using original image.', { error: thumbError });
         // Fallback to original image if thumbnail creation fails
@@ -167,7 +168,7 @@ const App: React.FC = () => {
     }
 
     // 2. File type validation
-    const supportedTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/avif'];
+    const supportedTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/avif', 'image/*'];
     const fileType = file.type;
     const fileName = file.name.toLowerCase();
     
@@ -179,7 +180,7 @@ const App: React.FC = () => {
                         fileName.endsWith('.heif') ||
                         fileName.endsWith('.avif');
 
-    if (!isSupported) {
+    if (!isSupported && fileType !== '') { // Some camera inputs have empty fileType
         setError("Unsupported file type. For best results, please upload a JPEG, PNG, or use the app's camera to take a new photo.");
         setAppState(AppState.ERROR);
         setImageSrc(null); // Clear any previous image preview
@@ -296,13 +297,6 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (appState) {
-      case AppState.CAMERA_ACTIVE:
-        return (
-          <CameraCapture
-            onCapture={handleImageSelected}
-            onClose={() => setAppState(AppState.IDLE)}
-          />
-        );
       case AppState.HISTORY:
         return (
           <HistoryScreen
@@ -321,12 +315,17 @@ const App: React.FC = () => {
             )}
             <Spinner />
             <h2 className="text-2xl font-bold mt-4 text-brand-teal">Analyzing Iris...</h2>
-            <p className="text-gray-400 mt-2 h-6">{analysisStatus || 'Our AI is looking deep into your eye...'}</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2 h-6">{analysisStatus || 'Our AI is looking deep into your eye...'}</p>
           </div>
         );
       case AppState.SUCCESS:
         return analysisResult && imageSrc && (
-          <AnalysisResult result={analysisResult} imageSrc={imageSrc} onReset={resetApp} />
+          <AnalysisResult 
+            result={analysisResult} 
+            imageSrc={imageSrc} 
+            onReset={resetApp}
+            setInfoModalContent={setInfoModalContent}
+          />
         );
       case AppState.ERROR:
          return (
@@ -335,13 +334,13 @@ const App: React.FC = () => {
               <img src={imageSrc} alt="Failed analysis subject" className="w-48 h-48 rounded-full object-cover border-4 border-red-500 shadow-lg mb-6" />
             )}
             <h2 className="text-2xl font-bold text-red-500">Analysis Failed</h2>
-            <p className="text-gray-300 mt-2 max-w-md whitespace-pre-line">
+            <p className="text-gray-600 dark:text-gray-300 mt-2 max-w-md whitespace-pre-line">
                 {error || 'There was a problem analyzing your image. Please check your internet connection and try again with a clear, well-lit photo.'}
             </p>
             {error && (
-                <details className="mt-4 text-left text-xs text-gray-400 max-w-md w-full">
-                    <summary className="cursor-pointer text-center text-gray-500">Show Technical Details</summary>
-                    <pre className="mt-2 bg-gray-800 p-2 rounded-lg overflow-auto whitespace-pre-wrap">
+                <details className="mt-4 text-left text-xs text-gray-500 dark:text-gray-400 max-w-md w-full">
+                    <summary className="cursor-pointer text-center text-gray-600 dark:text-gray-500">Show Technical Details</summary>
+                    <pre className="mt-2 bg-gray-200 dark:bg-gray-800 p-2 rounded-lg overflow-auto whitespace-pre-wrap">
                         {error}
                     </pre>
                 </details>
@@ -363,8 +362,8 @@ const App: React.FC = () => {
             <div className="mb-4 flex justify-center text-brand-pink">
               <IconSparkles className="w-16 h-16" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white">Iris Analyzer</h1>
-            <p className="mt-4 text-lg text-gray-300 max-w-xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white">Iris Analyzer</h1>
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
               Discover the story in your eyes. Upload or capture a high-quality photo of your iris for a fun AI-powered analysis.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
@@ -393,7 +392,7 @@ const App: React.FC = () => {
             <div className="mt-8 flex justify-center items-center gap-4 sm:gap-8">
               <button 
                 onClick={() => setIsDisclaimerVisible(true)}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium" 
+                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors text-sm font-medium" 
                 aria-label="View disclaimer"
               >
                 <IconInfo className="w-5 h-5" />
@@ -401,7 +400,7 @@ const App: React.FC = () => {
               </button>
               <button 
                 onClick={() => setIsShotTipsVisible(true)}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium" 
+                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors text-sm font-medium" 
                 aria-label="View tips for taking a good photo"
               >
                 <IconCamera className="w-5 h-5" />
@@ -410,42 +409,38 @@ const App: React.FC = () => {
             </div>
 
             {!isPro && (
-              <p className="mt-4 text-sm text-gray-400">
+              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 You have used {scanCount} {scanCount === 1 ? 'scan' : 'scans'} this week, {scansLeft} left.
               </p>
             )}
-
-            <div className="mt-12 w-full max-w-xs mx-auto border-t border-white/10 pt-6 flex justify-around items-center">
-                <button 
-                    onClick={() => setAppState(AppState.HISTORY)}
-                    className="flex flex-col items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
-                    aria-label="View analysis history"
-                >
-                    <IconHistory className="w-6 h-6" />
-                    <span className="text-xs font-medium tracking-wider uppercase">History</span>
-                </button>
-                <button 
-                    onClick={() => setActiveModal('settings')}
-                    className="flex flex-col items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
-                    aria-label="Open settings"
-                >
-                    <IconSettings className="w-6 h-6" />
-                    <span className="text-xs font-medium tracking-wider uppercase">Settings</span>
-                </button>
-            </div>
           </div>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-indigo-900 flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-indigo-100 dark:from-gray-900 dark:to-indigo-900 flex flex-col items-center justify-center p-4 relative pb-28">
       {isPro && <ProBadge />}
       <main className="w-full max-w-4xl mx-auto">
         {renderContent()}
       </main>
+
+      {[AppState.IDLE, AppState.SUCCESS, AppState.ERROR, AppState.HISTORY].includes(appState) && (
+        <BottomNavBar
+          activeState={appState}
+          onHome={resetApp}
+          onHistory={() => setAppState(AppState.HISTORY)}
+          onSettings={() => setActiveModal('settings')}
+        />
+      )}
       
-      {/* Modals */}
+      {/* Modals & Overlays */}
+      {appState === AppState.CAMERA_ACTIVE && (
+        <CameraCapture 
+          onCapture={handleImageSelected}
+          onClose={() => setAppState(AppState.IDLE)}
+        />
+      )}
       {isDisclaimerVisible && <DisclaimerModal onClose={() => setIsDisclaimerVisible(false)} />}
       {isShotTipsVisible && <ShotTipsModal onClose={() => setIsShotTipsVisible(false)} />}
       

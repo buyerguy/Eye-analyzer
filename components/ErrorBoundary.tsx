@@ -1,3 +1,4 @@
+
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
@@ -29,9 +30,9 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       // You can render any custom fallback UI
       return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-indigo-900 flex flex-col items-center justify-center p-4 text-white text-center">
+        <div className="min-h-screen bg-gradient-to-br from-gray-100 to-indigo-100 dark:from-gray-900 dark:to-indigo-900 flex flex-col items-center justify-center p-4 text-gray-800 dark:text-white text-center">
           <h1 className="text-3xl font-bold text-red-500">Something Went Wrong</h1>
-          <p className="mt-4 text-gray-300 max-w-md">
+          <p className="mt-4 text-gray-600 dark:text-gray-300 max-w-md">
             An unexpected error occurred. This might be a temporary issue. Please try refreshing the page.
           </p>
           <button
@@ -41,9 +42,9 @@ class ErrorBoundary extends Component<Props, State> {
             Refresh Page
           </button>
           {this.state.error && (
-             <details className="mt-6 text-left text-xs text-gray-400 max-w-md w-full">
+             <details className="mt-6 text-left text-xs text-gray-500 dark:text-gray-400 max-w-md w-full">
                 <summary className="cursor-pointer">Error Details</summary>
-                <pre className="mt-2 bg-gray-800 p-2 rounded-lg overflow-auto">
+                <pre className="mt-2 bg-gray-200 dark:bg-gray-800 p-2 rounded-lg overflow-auto">
                     {this.state.error.toString()}
                 </pre>
             </details>

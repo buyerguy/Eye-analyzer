@@ -71,6 +71,19 @@ const analysisSchema = {
       },
       required: ['title', 'description']
     },
+    healthIndicators: {
+        type: Type.ARRAY,
+        description: "A list of 2-4 non-medical, entertainment-focused 'health indicators' based on common iridology patterns like stress rings, etc. ABSOLUTELY NO MEDICAL ADVICE. Frame descriptions carefully. e.g., 'Potential Fatigue', 'Stress Levels'.",
+        items: {
+            type: Type.OBJECT,
+            properties: {
+                name: { type: Type.STRING, description: "The name of the indicator, e.g., 'Stress Levels'." },
+                description: { type: Type.STRING, description: "A 1-2 sentence fun, non-medical observation. e.g., 'The presence of faint concentric rings, sometimes called stress rings, may suggest the body has been under pressure.'" },
+                level: { type: Type.STRING, description: "A qualitative assessment, e.g., 'Low', 'Moderate', 'High', 'Normal'." }
+            },
+            required: ['name', 'description', 'level']
+        }
+    },
     uniquePatterns: {
         type: Type.ARRAY,
         description: "A list of 1-3 unique structural patterns detected in the iris (e.g., Concentric Rings, Radiant Crypts). Provide a name and a short, fun description for each.",
@@ -106,7 +119,7 @@ const analysisSchema = {
         }
     }
   },
-  required: ['ancestry', 'healthClues', 'biometricSignature', 'rarityIndex', 'personalityVibe', 'pigmentOddities', 'uniquePatterns', 'dominantColor', 'colorComposition']
+  required: ['ancestry', 'healthClues', 'biometricSignature', 'rarityIndex', 'personalityVibe', 'pigmentOddities', 'healthIndicators', 'uniquePatterns', 'dominantColor', 'colorComposition']
 };
 
 const processImage = (imageDataUrl: string, maxDimension: number = 1024): Promise<{ resizedB64: string, originalSize: number, newSize: number }> => {
@@ -187,7 +200,7 @@ export const createThumbnailDataUrl = (imageDataUrl: string, maxDimension: numbe
             
             ctx.drawImage(img, 0, 0, width, height);
             
-            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
             
             resolve(resizedDataUrl);
         };
@@ -254,6 +267,7 @@ export const analyzeIrisImage = async (
     For the ancestry section, include a 'metrics' object with fun but plausible-sounding data for globalPrevalence, regionalHotspots, and geneticProbability.
     Identify 1-3 unique iris patterns like 'Concentric Rings', 'Radiant Furrows', 'Crypts of Fuchs', etc. and provide a fun explanation for each.
     Determine the dominant color (with confidence score and hex code) and a breakdown of the color composition (top 3-4 colors with names, hex codes, and percentages).
+    Crucially, identify 2-4 non-medical 'health indicators' based on common iridology patterns (like stress rings for stress, or radial furrows for fatigue). Frame these as fun observations, NOT medical diagnoses. For example, 'Potential Fatigue' or 'Stress Levels'. Provide a name, a cautious description, and a level (Low, Moderate, High, or Normal) for each.
     Fill out all fields in the provided JSON schema with creative and relevant content.
     `
   };
@@ -305,7 +319,7 @@ export const analyzeIrisImage = async (
       const jsonText = response.text;
       const analysisResult = JSON.parse(jsonText) as IrisAnalysis;
 
-      if (!analysisResult.rarityIndex || typeof analysisResult.rarityIndex.percentage !== 'number' || !analysisResult.dominantColor || !analysisResult.uniquePatterns) {
+      if (!analysisResult.rarityIndex || typeof analysisResult.rarityIndex.percentage !== 'number' || !analysisResult.dominantColor || !analysisResult.uniquePatterns || !analysisResult.healthIndicators) {
           throw new Error("Invalid or incomplete analysis data received from AI.");
       }
       

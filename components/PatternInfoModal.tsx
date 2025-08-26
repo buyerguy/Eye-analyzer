@@ -19,12 +19,12 @@ const PatternInfoModal: React.FC<PatternInfoModalProps> = ({ pattern, onClose })
       onClick={onClose}
     >
       <div 
-        className="bg-gray-800 text-white p-8 rounded-2xl shadow-2xl w-full max-w-lg relative border border-white/20 mx-4"
+        className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-8 rounded-2xl shadow-2xl w-full max-w-lg relative border border-gray-200 dark:border-white/20 mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors"
           aria-label="Close pattern info"
         >
           <IconX className="w-6 h-6" />
@@ -33,7 +33,7 @@ const PatternInfoModal: React.FC<PatternInfoModalProps> = ({ pattern, onClose })
             <IconFingerprint className="w-7 h-7" />
             {pattern.name}
         </h2>
-        <p className="text-gray-300">
+        <p className="text-gray-600 dark:text-gray-300">
           {pattern.description}
         </p>
       </div>

@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { IconCamera, IconX, IconRetry, IconSwitchCamera } from './IconComponents';
 import Spinner from './Spinner';
 import { logger } from '../services/logger';
@@ -12,7 +11,7 @@ interface CameraCaptureProps {
 const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null); // Use a ref for the stream to prevent stale closures
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
@@ -45,11 +44,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
   useEffect(() => {
     let isMounted = true;
 
-    // Stop any existing stream
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-    
     setError(null);
     setIsLoading(true);
 
@@ -57,8 +51,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
       const constraints: MediaStreamConstraints = {
         video: {
           facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
         }
       };
       
@@ -74,7 +66,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         logger.info('Attempting to start camera.', { constraints });
         const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
         if (isMounted) {
-          setStream(mediaStream);
+          streamRef.current = mediaStream;
           if (videoRef.current) {
             videoRef.current.srcObject = mediaStream;
           }
@@ -86,20 +78,26 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
 
         logger.error(`Error starting camera with mode: ${facingMode}`, { error: err });
 
-        // If environment camera fails, automatically try user camera once.
-        if (facingMode === 'environment') {
-          logger.warn('Environment camera failed, trying user camera.');
-          setFacingMode('user'); // This will re-trigger the useEffect
+        // Handle permission errors immediately, as they affect all cameras and a retry is pointless.
+        if (err instanceof Error && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+          if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+          setIsLoading(false);
+          setError('Camera permission denied. Please enable camera access in your browser/system settings and try again.');
           return;
         }
 
+        // If the rear ('environment') camera fails for other reasons, automatically try the front ('user') camera once.
+        if (facingMode === 'environment') {
+          logger.warn('Environment camera failed, attempting to fall back to user camera.');
+          setFacingMode('user'); // This will re-trigger the useEffect with the other camera
+          return;
+        }
+        
+        // If we're here, it means the fallback also failed or there was no fallback. Show the specific error.
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
         setIsLoading(false);
-        // Handle common errors
         if (err instanceof Error) {
-          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-            setError('Camera permission denied. Please enable camera access in your browser/system settings and try again.');
-          } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
             setError('No camera found on this device. Please ensure a camera is connected and enabled.');
           } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
             setError('Camera is currently in use by another application. Please close the other app and try again.');
@@ -118,8 +116,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
 
     return () => {
       isMounted = false;
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -140,7 +138,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
   };
 
   const handleCapture = () => {
-    if (videoRef.current && canvasRef.current && stream?.active) {
+    if (videoRef.current && canvasRef.current && streamRef.current?.active) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
@@ -158,8 +156,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
         
         // Stop the stream and pass the image back
-        stream.getTracks().forEach(track => track.stop());
-        setStream(null);
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+        }
         onCapture(dataUrl);
       }
     } else {

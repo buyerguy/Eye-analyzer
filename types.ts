@@ -4,8 +4,8 @@ export enum AppState {
   ANALYZING,
   SUCCESS,
   ERROR,
-  CAMERA_ACTIVE,
   HISTORY,
+  CAMERA_ACTIVE,
 }
 
 export interface AnalysisCategory {
@@ -25,6 +25,12 @@ export interface RarityAnalysis extends AnalysisCategory {
   percentage: number;
 }
 
+export interface HealthIndicator {
+  name: string;
+  description: string;
+  level: 'Low' | 'Moderate' | 'High' | 'Normal';
+}
+
 export interface IrisAnalysis {
   ancestry: AncestryAnalysis;
   healthClues: AnalysisCategory;
@@ -32,6 +38,7 @@ export interface IrisAnalysis {
   rarityIndex: RarityAnalysis;
   personalityVibe: AnalysisCategory;
   pigmentOddities: AnalysisCategory;
+  healthIndicators: HealthIndicator[];
   uniquePatterns: {
     name: string;
     description: string;

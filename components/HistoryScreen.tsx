@@ -14,7 +14,7 @@ const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onView, onDelet
     const uniquenessScore = 100 - analysis.rarityIndex.percentage;
 
     return (
-        <div className="bg-gray-800/50 p-4 rounded-xl border border-white/10 flex gap-4 items-start transition-all hover:bg-gray-800/80">
+        <div className="bg-white dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-white/10 flex gap-4 items-start transition-all hover:bg-gray-200 dark:hover:bg-gray-800/80 shadow-sm">
             <img 
                 src={imageSrc} 
                 alt="Analyzed eye thumbnail" 
@@ -24,12 +24,12 @@ const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onView, onDelet
             <div className="flex-grow cursor-pointer" onClick={onView}>
                 <div className="flex items-center gap-2">
                     <span className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: analysis.dominantColor.hexCode }}></span>
-                    <h3 className="font-bold text-white text-lg">{analysis.dominantColor.name} {analysis.dominantColor.confidence}%</h3>
+                    <h3 className="font-bold text-gray-800 dark:text-white text-lg">{analysis.dominantColor.name} {analysis.dominantColor.confidence}%</h3>
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
-                    <span className="font-semibold text-gray-300">Uniqueness:</span> {uniquenessScore}/100 
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <span className="font-semibold text-gray-600 dark:text-gray-300">Uniqueness:</span> {uniquenessScore}/100 
                     <span className="mx-2">|</span>
-                    <span className="font-semibold text-gray-300">Prevalence:</span> {analysis.rarityIndex.percentage}%
+                    <span className="font-semibold text-gray-600 dark:text-gray-300">Prevalence:</span> {analysis.rarityIndex.percentage}%
                 </div>
                  <div className="flex items-center gap-2 mt-2">
                     {analysis.colorComposition.slice(0, 4).map((comp, index) => (
@@ -38,7 +38,7 @@ const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onView, onDelet
                         </div>
                     ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">{new Date(date).toLocaleString()}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-500 mt-2">{new Date(date).toLocaleString()}</p>
             </div>
             <button 
               onClick={(e) => { 
@@ -85,13 +85,13 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ history, onViewItem, onDe
     return (
         <div className="animate-fade-in w-full max-w-3xl mx-auto">
             <header className="flex items-center justify-between mb-6">
-                <button onClick={onBack} className="p-2 rounded-full hover:bg-white/10 text-white" aria-label="Go back">
+                <button onClick={onBack} className="p-2 rounded-full hover:bg-black/10 text-gray-800 dark:text-white" aria-label="Go back">
                     <IconArrowLeft className="w-6 h-6" />
                 </button>
-                <h1 className="text-3xl font-bold text-white">History</h1>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">History</h1>
                 <button 
                   onClick={onClearAll} 
-                  className={`p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-red-500 transition-colors ${history.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 rounded-full hover:bg-black/10 text-gray-500 hover:text-red-500 transition-colors ${history.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   aria-label="Clear all history"
                   disabled={history.length === 0}
                 >
@@ -106,7 +106,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ history, onViewItem, onDe
                     placeholder="Search by color, insight, or date..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-gray-800/60 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-purple"
+                    className="w-full bg-gray-200 dark:bg-gray-800/60 border border-gray-300 dark:border-white/10 rounded-lg py-3 pl-12 pr-4 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-purple"
                 />
             </div>
 
@@ -123,7 +123,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ history, onViewItem, onDe
                 </div>
             ) : (
                 <div className="text-center py-16">
-                    <p className="text-gray-400 text-lg">
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">
                         {searchQuery ? 'No scans match your search.' : 'No scans yet—try your first analysis!'}
                     </p>
                 </div>
