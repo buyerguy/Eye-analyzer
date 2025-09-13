@@ -8,35 +8,50 @@ import Spinner from './Spinner';
 // This is the component that will be captured as an image.
 // It's defined here for encapsulation and styled with Tailwind.
 const ShareableCard = React.forwardRef<HTMLDivElement, { result: IrisAnalysis, imageSrc: string }>(({ result, imageSrc }, ref) => {
+    const dominantColor = result.dominantColor.hexCode;
+    const backgroundStyle = {
+        // A subtle radial gradient glow behind the image, on top of a dark linear gradient
+        background: `radial-gradient(circle at 50% 45%, ${dominantColor}22, transparent 55%), linear-gradient(to bottom right, #0F172A, #1E293B)`
+    };
+    const imageBorderStyle = {
+        borderColor: dominantColor,
+        boxShadow: `0 0 40px -10px ${dominantColor}`
+    };
+
     return (
-        <div ref={ref} className="bg-gradient-to-br from-gray-900 to-indigo-900 text-white font-sans w-[800px] h-[800px] flex flex-col items-center justify-center p-10">
-            <img src={imageSrc} alt="Analyzed eye" className="w-[300px] h-[300px] rounded-full object-cover border-8 border-brand-teal" />
+        <div ref={ref} style={backgroundStyle} className="font-sans text-white w-[800px] h-[800px] flex flex-col items-center justify-between p-12 box-border">
+            
+            {/* Header: App name */}
+            <div className="flex items-center gap-3 self-start opacity-80">
+                <IconEye className="w-8 h-8 text-brand-teal" />
+                <span className="text-3xl font-bold">Iris Analyzer</span>
+            </div>
 
-            <h1 className="text-5xl font-extrabold mt-5 text-white text-center">
-                {result.dominantColor.name} Eye Analysis
-            </h1>
-
-            <div className="flex gap-8 mt-8">
-                <div className="text-center">
-                    <p className="text-2xl text-gray-400">Rarity</p>
-                    <p className="text-5xl font-bold text-brand-pink">{100 - result.rarityIndex.percentage}%</p>
-                </div>
-                <div className="text-center">
-                    <p className="text-2xl text-gray-400">Personality Vibe</p>
-                    <p className="text-5xl font-bold text-brand-purple">{result.personalityVibe.title}</p>
+            {/* Main Content: Image and Dominant Color */}
+            <div className="flex flex-col items-center -mt-16">
+                <img src={imageSrc} alt="Analyzed eye" style={imageBorderStyle} className="w-[300px] h-[300px] rounded-full object-cover border-8" />
+                
+                <div className="text-center mt-6">
+                    <p className="text-2xl text-gray-400">My Iris Color</p>
+                    <h1 className="text-7xl font-extrabold mt-1" style={{ color: dominantColor }}>
+                        {result.dominantColor.name}
+                    </h1>
                 </div>
             </div>
 
-            <div className="mt-auto w-full border-t-2 border-white/20 pt-5">
-                <p className="text-3xl text-center text-gray-300">
-                    Check out my unique results! Click the app link below to see yours.
-                </p>
-                <p className="text-2xl text-center font-bold text-brand-teal mt-2">
-                    iris-analyzer.app
-                </p>
-                <div className="flex items-center justify-end mt-5 opacity-80">
-                    <IconEye className="w-6 h-6" />
-                    <span className="text-xl ml-2 font-semibold">Iris Analyzer</span>
+            {/* Stats Footer in a 3-column grid */}
+            <div className="w-full grid grid-cols-3 gap-6 text-center border-t-2 border-white/10 pt-8">
+                <div>
+                    <p className="text-xl text-gray-400 uppercase tracking-widest font-medium">Rarity</p>
+                    <p className="text-5xl font-bold text-brand-pink mt-2">{100 - result.rarityIndex.percentage}%</p>
+                </div>
+                <div>
+                    <p className="text-xl text-gray-400 uppercase tracking-widest font-medium">Personality</p>
+                    <p className="text-4xl font-bold text-brand-purple mt-2 leading-tight">{result.personalityVibe.title}</p>
+                </div>
+                <div>
+                    <p className="text-xl text-gray-400 uppercase tracking-widest font-medium">Ancestry</p>
+                    <p className="text-4xl font-bold text-brand-teal mt-2 leading-tight">{result.ancestry.metrics.regionalHotspots[0] || 'Unique'}</p>
                 </div>
             </div>
         </div>
